@@ -6,6 +6,7 @@ import com.zerobase.cms.order.domain.redis.Cart;
 import com.zerobase.domain.config.JwtAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,5 +26,13 @@ public class CustomerCartController {
         @RequestHeader(name = "X-Auth-Token") String token,
         @RequestBody AddProductCartForm form){
         return ResponseEntity.ok(cartApplication.addCart(provider.getUserVo(token).getId(), form));
+    }
+
+    @GetMapping
+    public ResponseEntity<Cart> showCart(
+        @RequestHeader(name = "X-Auth-Token") String token,
+        @RequestBody AddProductCartForm form
+    ) {
+        return ResponseEntity.ok(cartApplication.getCart(provider.getUserVo(token).getId()));
     }
 }
