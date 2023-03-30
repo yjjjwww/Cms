@@ -13,6 +13,7 @@ public enum ErrorCode {
     ALREADY_VERIFY(HttpStatus.BAD_REQUEST, "이미 인증이 완료되었습니다."),
     LOGIN_CHECK_FAIL(HttpStatus.BAD_REQUEST, "아이디나 패스워드를 확인해 주세요."),
     NOT_ENOUGH_BALANCE(HttpStatus.BAD_REQUEST, "잔액이 부족합니다."),
+    WRONG_EMAIL_ADDRESS(HttpStatus.BAD_REQUEST, "이메일 주소가 다릅니다."),
     WRONG_VERIFICATION(HttpStatus.BAD_REQUEST, "잘못된 인증 시도입니다.");
 
 
