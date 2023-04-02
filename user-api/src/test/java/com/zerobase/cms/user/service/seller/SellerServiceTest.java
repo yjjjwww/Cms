@@ -199,4 +199,68 @@ class SellerServiceTest {
 
         assertEquals(LocalDateTime.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), result.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     }
+
+    @Test
+    void findByIdAndEmail() {
+        given(sellerRepository.findById(anyLong()).stream().filter(
+            seller -> seller.getEmail().equals(anyString())).findFirst())
+            .willReturn(Optional.of(Seller.builder()
+                .email("zerobase@naver.com")
+                .name("zerobase")
+                .password("1234")
+                .build()));
+
+        Seller seller = sellerService.findByIdAndEmail(1L, "zerobase@naver.com").get();
+
+        assertEquals("zerobase@naver.com", seller.getEmail());
+        assertEquals("zerobase", seller.getName());
+        assertEquals("1234", seller.getPassword());
+    }
+
+    @Test
+    void findValidSeller() {
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.of(Seller.builder()
+                .email("zerobase@naver.com")
+                .name("zerobase")
+                .password("1234")
+                .verify(true)
+                .build()));
+
+        Seller seller = sellerService.findValidSeller( "zerobase@naver.com", "1234").get();
+
+        assertEquals("zerobase@naver.com", seller.getEmail());
+        assertEquals("zerobase", seller.getName());
+        assertEquals("1234", seller.getPassword());
+    }
+
+    @Test
+    void findValidSeller_Not_Verify() {
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.of(Seller.builder()
+                .email("zerobase@naver.com")
+                .name("zerobase")
+                .password("1234")
+                .verify(false)
+                .build()));
+
+        Optional<Seller> customer = sellerService.findValidSeller( "zerobase@naver.com", "1234");
+
+        assertEquals(false, customer.isPresent());
+    }
+
+    @Test
+    void findValidSeller_No_Email() {
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.of(Seller.builder()
+                .email("zerobase@gmail.com")
+                .name("zerobase")
+                .password("1234")
+                .verify(false)
+                .build()));
+
+        Optional<Seller> seller = sellerService.findValidSeller( "zerobase@naver.com", "1234");
+
+        assertEquals(false, seller.isPresent());
+    }
 }
