@@ -13,6 +13,8 @@ import org.springframework.data.redis.core.RedisHash;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @RedisHash("cart")
 public class Cart {
     @Id
