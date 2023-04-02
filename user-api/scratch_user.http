@@ -1,0 +1,63 @@
+### 회원가입 (고객)
+POST http://localhost:8081/signup/customer
+Content-Type: application/json
+
+{
+  "birth": "2023-03-29",
+  "email": "yjjjwww@naver.com",
+  "name": "yjjjwww",
+  "password": "1234",
+  "phone": "01000000000"
+}
+
+### 이메일 인증 (고객)
+GET http://localhost:8081/signup/customer/verify?email=yjjjwww@naver.com&code=
+
+### 로그인 (고객)
+POST http://localhost:8081/signIn/customer
+Content-Type: application/json
+
+{
+  "email": "yjjjwww@naver.com",
+  "password": "1234"
+}
+
+### 회원 정보 조회 (고객)
+GET http://localhost:8081/customer/getInfo
+Content-Type: application/json
+X-Auth-Token:
+
+### 잔액 변경 (고객)
+POST http://localhost:8081/customer/balance
+Content-Type: application/json
+X-Auth-Token:
+
+{
+  "from": "zerobase",
+  "message": "test",
+  "money": 10000
+}
+
+
+#######################
+
+### 회원가입 (셀러)
+POST http://localhost:8081/signup/seller
+Content-Type: application/json
+
+{
+  "birth": "2023-03-29",
+  "email": "yjjjwww@naver.com",
+  "name": "yjjjwww",
+  "password": "1234",
+  "phone": "01000000000"
+}
+
+### 로그인 (셀러)
+POST http://localhost:8081/signIn/seller
+Content-Type: application/json
+
+{
+  "email": "yjjjwww@naver.com",
+  "password": "1234"
+}
