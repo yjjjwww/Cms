@@ -10,6 +10,8 @@ import com.zerobase.cms.user.exception.ErrorCode;
 import com.zerobase.cms.user.service.customer.SignUpCustomerService;
 import com.zerobase.cms.user.service.seller.SellerService;
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,18 @@ public class SignUpApplication {
         if (signUpCustomerService.isEmailExist(form.getEmail())) {
             throw new CustomException(ErrorCode.ALREADY_REGISTER_USER);
         } else {
+            if (!isValidEmail(form.getEmail())) {
+                throw new CustomException(ErrorCode.NOT_VALID_EMAIL);
+            }
+
+            if (!isValidPhone(form.getPhone())) {
+                throw new CustomException(ErrorCode.NOT_VALID_PHONE);
+            }
+
+            if (!isValidPassword(form.getPassword())) {
+                throw new CustomException(ErrorCode.NOT_VALID_PASSWORD);
+            }
+
             Customer c = signUpCustomerService.signUp(form);
             LocalDateTime now = LocalDateTime.now();
 
@@ -53,6 +67,18 @@ public class SignUpApplication {
         if (sellerService.isEmailExist(form.getEmail())) {
             throw new CustomException(ErrorCode.ALREADY_REGISTER_USER);
         } else {
+            if (!isValidEmail(form.getEmail())) {
+                throw new CustomException(ErrorCode.NOT_VALID_EMAIL);
+            }
+
+            if (!isValidPhone(form.getPhone())) {
+                throw new CustomException(ErrorCode.NOT_VALID_PHONE);
+            }
+
+            if (!isValidPassword(form.getPassword())) {
+                throw new CustomException(ErrorCode.NOT_VALID_PASSWORD);
+            }
+
             Seller s = sellerService.signUp(form);
             LocalDateTime now = LocalDateTime.now();
 
@@ -80,5 +106,42 @@ public class SignUpApplication {
             .append(email)
             .append("&code=")
             .append(code).toString();
+    }
+
+    private static boolean isValidEmail(String email) {
+        boolean err = false;
+        String regex = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(email);
+        if(m.matches()) {
+            err = true;
+        }
+        return err;
+    }
+
+    private static boolean isValidPhone(String phone) {
+        if (phone.length() > 11 || phone.length() < 5) {
+            return false;
+        }
+        boolean err = false;
+        String regex = "^[0-9]*$";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(phone);
+        if(m.matches()) {
+            err = true;
+        }
+        return err;
+    }
+
+    //최소 8자리에 숫자, 문자, 특수문자 각각 1개 이상 포함
+    private static boolean isValidPassword(String password) {
+        boolean err = false;
+        String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(password);
+        if(m.matches()) {
+            err = true;
+        }
+        return err;
     }
 }
