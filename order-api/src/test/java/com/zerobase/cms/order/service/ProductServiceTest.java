@@ -1,65 +1,190 @@
 package com.zerobase.cms.order.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 
 import com.zerobase.cms.order.domain.model.Product;
+import com.zerobase.cms.order.domain.model.ProductItem;
 import com.zerobase.cms.order.domain.product.AddProductForm;
-import com.zerobase.cms.order.domain.product.AddProductItemForm;
+import com.zerobase.cms.order.domain.product.UpdateProductForm;
+import com.zerobase.cms.order.domain.product.UpdateProductItemForm;
 import com.zerobase.cms.order.domain.repository.ProductRepository;
+import com.zerobase.cms.order.exception.CustomException;
+import com.zerobase.cms.order.exception.ErrorCode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-    @Autowired
-    private ProductService productService;
-    @Autowired
+    @Mock
     private ProductRepository productRepository;
+
+    @InjectMocks
+    private ProductService productService;
 
     @Test
     void addProduct() {
-        Long sellerId = 1L;
+        List<ProductItem> productItems = new ArrayList<>();
+        productItems.add(ProductItem.builder()
+            .id(1L)
+            .name("item")
+            .count(1)
+            .price(50)
+            .build());
 
-        AddProductForm form = makeProductForm("나이키 에어포스", "신발", 3);
+        AddProductForm form = AddProductForm.builder()
+            .name("product")
+            .description("description")
+            .items(new ArrayList<>())
+            .build();
 
-        Product p = productService.addProduct(sellerId, form);
+        given(productRepository.save(any()))
+            .willReturn(Product.builder()
+                .id(1L)
+                .sellerId(1L)
+                .name("product")
+                .description("description")
+                .productItems(productItems)
+                .build());
 
-        Product result = productRepository.findWithProductItemsById(p.getId()).get();
+        Product result = productService.addProduct(anyLong(), form);
 
-        assertNotNull(result);
-
-        assertEquals(result.getName(), "나이키 에어포스");
-        assertEquals(result.getDescription(), "신발");
-
-        assertEquals(result.getProductItems().size(), 3);
-        assertEquals(result.getProductItems().get(0).getName(), "나이키 에어포스0");
-        assertEquals(result.getProductItems().get(0).getPrice(), 10000);
-        assertEquals(result.getProductItems().get(0).getCount(), 1);
+        assertEquals("product", result.getName());
+        assertEquals(1L, result.getId());
+        assertEquals("item", result.getProductItems().get(0).getName());
     }
 
-    private AddProductForm makeProductForm(String name, String description, int itemCount) {
-        List<AddProductItemForm> itemForms = new ArrayList<>();
-        for (int i = 0; i < itemCount; i++) {
-            itemForms.add(makeProductItemForm(null, name + i));
-        }
-        return AddProductForm.builder()
-            .name(name)
-            .description(description)
+    @Test
+    void updateProductSuccess() {
+        List<ProductItem> productItems = new ArrayList<>();
+        productItems.add(ProductItem.builder()
+            .id(1L)
+            .name("item")
+            .count(1)
+            .price(50)
+            .build());
+
+        List<UpdateProductItemForm> itemForms = new ArrayList<>();
+        itemForms.add(UpdateProductItemForm.builder()
+            .id(1L)
+            .productId(1L)
+            .name("name")
+            .price(1000)
+            .count(3)
+            .build());
+
+        UpdateProductForm form = UpdateProductForm.builder()
+            .id(1L)
+            .name("zerobase")
+            .description("new description")
             .items(itemForms)
             .build();
+
+        given(productRepository.findBySellerIdAndId(anyLong(), anyLong()))
+            .willReturn(Optional.ofNullable(Product.builder()
+                .id(1L)
+                .sellerId(1L)
+                .name("product")
+                .description("description")
+                .productItems(productItems)
+                .build()));
+
+        Product result = productService.updateProduct(1L, form);
+
+        assertEquals("zerobase", result.getName());
+        assertEquals("name", result.getProductItems().get(0).getName());
+        assertEquals(1000, result.getProductItems().get(0).getPrice());
     }
 
-    private static AddProductItemForm makeProductItemForm(Long productId, String name) {
-        return AddProductItemForm.builder()
-            .productId(productId)
-            .name(name)
-            .price(10000)
-            .count(1)
+    @Test
+    void updateProductFail_NOT_FOUND_PRODUCT() {
+        UpdateProductForm form = UpdateProductForm.builder()
+            .id(1L)
+            .name("zerobase")
+            .description("new description")
+            .items(new ArrayList<>())
             .build();
+
+        given(productRepository.findBySellerIdAndId(anyLong(), anyLong()))
+            .willReturn(Optional.empty());
+
+        CustomException exception = assertThrows(CustomException.class,
+            () -> productService.updateProduct(1L, form));
+
+        assertEquals(ErrorCode.NOT_FOUND_PRODUCT, exception.getErrorCode());
+        assertEquals("상품을 찾을 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    void updateProductFail_NOT_FOUND_ITEM() {
+        List<UpdateProductItemForm> itemForms = new ArrayList<>();
+        itemForms.add(UpdateProductItemForm.builder()
+            .id(1L)
+            .productId(1L)
+            .name("name")
+            .price(1000)
+            .count(3)
+            .build());
+
+        UpdateProductForm form = UpdateProductForm.builder()
+            .id(1L)
+            .name("zerobase")
+            .description("new description")
+            .items(itemForms)
+            .build();
+
+        given(productRepository.findBySellerIdAndId(anyLong(), anyLong()))
+            .willReturn(Optional.ofNullable(Product.builder()
+                .id(1L)
+                .sellerId(1L)
+                .name("product")
+                .description("description")
+                .productItems(new ArrayList<>())
+                .build()));
+
+        CustomException exception = assertThrows(CustomException.class,
+            () -> productService.updateProduct(1L, form));
+
+        assertEquals(ErrorCode.NOT_FOUND_ITEM, exception.getErrorCode());
+        assertEquals("아이템을 찾을 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    void deleteProductSuccess() {
+        given(productRepository.findBySellerIdAndId(anyLong(), anyLong()))
+            .willReturn(Optional.ofNullable(Product.builder()
+                .id(1L)
+                .sellerId(1L)
+                .name("product")
+                .description("description")
+                .productItems(new ArrayList<>())
+                .build()));
+
+        Product result = productService.deleteProduct(1L, 1L);
+
+        assertEquals(1L, result.getId());
+        assertEquals("product", result.getName());
+    }
+
+    @Test
+    void deleteProductFail_NOT_FOUND_PRODUCT() {
+        given(productRepository.findBySellerIdAndId(anyLong(), anyLong()))
+            .willReturn(Optional.empty());
+
+        CustomException exception = assertThrows(CustomException.class,
+            () -> productService.deleteProduct(1L, 1L));
+
+        assertEquals(ErrorCode.NOT_FOUND_PRODUCT, exception.getErrorCode());
+        assertEquals("상품을 찾을 수 없습니다.", exception.getMessage());
     }
 }

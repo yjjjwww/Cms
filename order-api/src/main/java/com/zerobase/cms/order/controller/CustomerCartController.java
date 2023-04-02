@@ -48,7 +48,7 @@ public class CustomerCartController {
     }
 
     @PostMapping("/order")
-    public ResponseEntity<?> order(
+    public ResponseEntity<String> order(
         @RequestHeader(name = "X-Auth-Token") String token,
         @RequestBody Cart cart) {
         Cart orderCart = orderApplication.order(token, cart);
