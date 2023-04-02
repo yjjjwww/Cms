@@ -1,4 +1,4 @@
-package com.zerobase.cms.user.client.service;
+package com.zerobase.cms.user.service.seller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,11 +10,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.zerobase.cms.user.domain.SignUpForm;
-import com.zerobase.cms.user.domain.model.Customer;
-import com.zerobase.cms.user.domain.repository.CustomerRepository;
+import com.zerobase.cms.user.domain.model.Seller;
+import com.zerobase.cms.user.domain.repository.SellerRepository;
 import com.zerobase.cms.user.exception.CustomException;
 import com.zerobase.cms.user.exception.ErrorCode;
-import com.zerobase.cms.user.service.customer.SignUpCustomerService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,13 +26,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class SignUpCustomerServiceTest {
+class SellerServiceTest {
 
     @Mock
-    private CustomerRepository customerRepository;
+    private SellerRepository sellerRepository;
 
     @InjectMocks
-    private SignUpCustomerService signUpCustomerService;
+    private SellerService sellerService;
 
     @Test
     void signUp() {
@@ -45,40 +44,40 @@ class SignUpCustomerServiceTest {
             .phone("01000000000")
             .build();
 
-        given(customerRepository.save(any()))
-            .willReturn(Customer.from(form));
+        given(sellerRepository.save(any()))
+            .willReturn(Seller.from(form));
 
-        ArgumentCaptor<Customer> captor = ArgumentCaptor.forClass(Customer.class);
+        ArgumentCaptor<Seller> captor = ArgumentCaptor.forClass(Seller.class);
 
-        Customer customer = signUpCustomerService.signUp(form);
+        Seller seller = sellerService.signUp(form);
 
-        verify(customerRepository, times(1)).save(captor.capture());
-        assertEquals("name", customer.getName());
+        verify(sellerRepository, times(1)).save(captor.capture());
+        assertEquals("name", seller.getName());
     }
 
     @Test
     void isEmailExist() {
-        given(customerRepository.findByEmail(anyString()))
-            .willReturn(Optional.ofNullable(Customer.builder().build()));
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.ofNullable(Seller.builder().build()));
 
-        boolean result = signUpCustomerService.isEmailExist("email");
+        boolean result = sellerService.isEmailExist("email");
 
         assertEquals(true, result);
     }
 
     @Test
     void isEmailNotExist() {
-        given(customerRepository.findByEmail(anyString()))
+        given(sellerRepository.findByEmail(anyString()))
             .willReturn(Optional.empty());
 
-        boolean result = signUpCustomerService.isEmailExist("email");
+        boolean result = sellerService.isEmailExist("email");
 
         assertEquals(false, result);
     }
 
     @Test
     void verifyEmailSuccess() {
-        Customer customerBeforeVerify = Customer.builder()
+        Seller sellerBeforeVerify = Seller.builder()
             .email("zerobase@naver.com")
             .name("zerobase")
             .password("zero1234@!#")
@@ -89,23 +88,23 @@ class SignUpCustomerServiceTest {
             .verify(false)
             .build();
 
-        given(customerRepository.findByEmail(anyString()))
-            .willReturn(Optional.ofNullable(customerBeforeVerify));
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.ofNullable(sellerBeforeVerify));
 
-        ArgumentCaptor<Customer> captor = ArgumentCaptor.forClass(Customer.class);
+        ArgumentCaptor<Seller> captor = ArgumentCaptor.forClass(Seller.class);
 
-        signUpCustomerService.verifyEmail("zerobase@naver.com", "0000");
+        sellerService.verifyEmail("zerobase@naver.com", "0000");
 
-        verify(customerRepository, times(1)).save(captor.capture());
+        verify(sellerRepository, times(1)).save(captor.capture());
     }
 
     @Test
     void verifyEmailFail_NOT_FOUND_USER() {
-        given(customerRepository.findByEmail(anyString()))
+        given(sellerRepository.findByEmail(anyString()))
             .willReturn(Optional.empty());
 
         CustomException exception = assertThrows(CustomException.class,
-            () -> signUpCustomerService.verifyEmail("zerobase", "1111"));
+            () -> sellerService.verifyEmail("zerobase", "1111"));
 
         assertEquals(ErrorCode.NOT_FOUND_USER, exception.getErrorCode());
         assertEquals("일치하는 회원이 없습니다.", exception.getMessage());
@@ -113,7 +112,7 @@ class SignUpCustomerServiceTest {
 
     @Test
     void verifyEmailFail_ALREADY_VERIFY() {
-        Customer customerBeforeVerify = Customer.builder()
+        Seller sellerBeforeVerify = Seller.builder()
             .email("zerobase@naver.com")
             .name("zerobase")
             .password("zero1234@!#")
@@ -124,11 +123,11 @@ class SignUpCustomerServiceTest {
             .verify(true)
             .build();
 
-        given(customerRepository.findByEmail(anyString()))
-            .willReturn(Optional.ofNullable(customerBeforeVerify));
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.ofNullable(sellerBeforeVerify));
 
         CustomException exception = assertThrows(CustomException.class,
-            () -> signUpCustomerService.verifyEmail("zerobase", "1111"));
+            () -> sellerService.verifyEmail("zerobase", "1111"));
 
         assertEquals(ErrorCode.ALREADY_VERIFY, exception.getErrorCode());
         assertEquals("이미 인증이 완료되었습니다.", exception.getMessage());
@@ -136,7 +135,7 @@ class SignUpCustomerServiceTest {
 
     @Test
     void verifyEmailFail_WRONG_VERIFICATION() {
-        Customer customerBeforeVerify = Customer.builder()
+        Seller sellerBeforeVerify = Seller.builder()
             .email("zerobase@naver.com")
             .name("zerobase")
             .password("zero1234@!#")
@@ -147,11 +146,11 @@ class SignUpCustomerServiceTest {
             .verify(false)
             .build();
 
-        given(customerRepository.findByEmail(anyString()))
-            .willReturn(Optional.ofNullable(customerBeforeVerify));
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.ofNullable(sellerBeforeVerify));
 
         CustomException exception = assertThrows(CustomException.class,
-            () -> signUpCustomerService.verifyEmail("zerobase", "1111"));
+            () -> sellerService.verifyEmail("zerobase", "1111"));
 
         assertEquals(ErrorCode.WRONG_VERIFICATION, exception.getErrorCode());
         assertEquals("잘못된 인증 시도입니다.", exception.getMessage());
@@ -159,7 +158,7 @@ class SignUpCustomerServiceTest {
 
     @Test
     void verifyEmailFail_EXPIRE_CODE() {
-        Customer customerBeforeVerify = Customer.builder()
+        Seller sellerBeforeVerify = Seller.builder()
             .email("zerobase@naver.com")
             .name("zerobase")
             .password("zero1234@!#")
@@ -170,11 +169,11 @@ class SignUpCustomerServiceTest {
             .verify(false)
             .build();
 
-        given(customerRepository.findByEmail(anyString()))
-            .willReturn(Optional.ofNullable(customerBeforeVerify));
+        given(sellerRepository.findByEmail(anyString()))
+            .willReturn(Optional.ofNullable(sellerBeforeVerify));
 
         CustomException exception = assertThrows(CustomException.class,
-            () -> signUpCustomerService.verifyEmail("zerobase", "0000"));
+            () -> sellerService.verifyEmail("zerobase", "0000"));
 
         assertEquals(ErrorCode.EXPIRE_CODE, exception.getErrorCode());
         assertEquals("인증 시간이 만료되었습니다.", exception.getMessage());
@@ -182,7 +181,7 @@ class SignUpCustomerServiceTest {
 
     @Test
     void changeCustomerValidateEmail() {
-        Customer customer = Customer.builder()
+        Seller customer = Seller.builder()
             .email("zerobase@naver.com")
             .name("zerobase")
             .password("zero1234@!#")
@@ -193,10 +192,10 @@ class SignUpCustomerServiceTest {
             .verify(false)
             .build();
 
-        given(customerRepository.findById(anyLong()))
+        given(sellerRepository.findById(anyLong()))
             .willReturn(Optional.ofNullable(customer));
 
-        LocalDateTime result = signUpCustomerService.changeCustomerValidateEmail(1L, "0000");
+        LocalDateTime result = sellerService.changeSellerValidateEmail(1L, "0000");
 
         assertEquals(LocalDateTime.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), result.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     }

@@ -51,6 +51,7 @@ public class SellerService {
             throw new CustomException(ErrorCode.EXPIRE_CODE);
         }
         seller.setVerify(true);
+        sellerRepository.save(seller);
     }
 
     @Transactional

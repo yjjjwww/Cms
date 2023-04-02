@@ -39,6 +39,7 @@ public class SignUpCustomerService {
             throw new CustomException(ErrorCode.EXPIRE_CODE);
         }
         customer.setVerify(true);
+        customerRepository.save(customer);
     }
 
     @Transactional
